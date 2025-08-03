@@ -4,7 +4,7 @@ const upload = multer({ dest: 'uploads/' })
 const axios = require('axios');
 
 module.exports.homePage = (req, res) => {
-    res.send("Home Page Working....");
+    res.redirect("/listings");
 }
 
 module.exports.index = async (req, res) => {

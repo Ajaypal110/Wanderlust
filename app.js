@@ -70,8 +70,7 @@ const sessionOptions = {
 };
 
 
-
-// app.get("/", listingController.homePage);
+app.get("/", listingController.homePage);
 
 app.use(session(sessionOptions));
 app.use(flash());

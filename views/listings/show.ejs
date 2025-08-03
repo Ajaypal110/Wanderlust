@@ -56,11 +56,12 @@
           <label class="form-label fw-semibold">Rating:</label>
           <div id="starRating" class="mb-2">
             <% for (let i=1; i <=5; i++) { %>
-              <i class="bi <%= i <= 2 ? 'bi-star-fill' : 'bi-star' %> text-warning"
-                data-value="<%= i %>"
-                style="font-size: 1.7rem; cursor: pointer;"></i>
+              <i class="bi bi-star text-warning"
+                 data-value="<%= i %>"
+                 style="font-size: 1.7rem; cursor: pointer;"></i>
             <% } %>
           </div>
+          <!-- Hidden input with default 2 -->
           <input type="hidden" id="ratingInput" name="review[rating]" value="2" />
         </div>
 
@@ -118,6 +119,10 @@
   const stars = document.querySelectorAll('#starRating i');
   const ratingInput = document.getElementById('ratingInput');
 
+  // Start with no stars visually selected, but backend default = 2
+  let selectedRating = 0;
+  ratingInput.value = 2;
+
   function highlightStars(rating) {
     stars.forEach((s, index) => {
       if (index < rating) {
@@ -130,14 +135,21 @@
     });
   }
 
-  highlightStars(2);
+  highlightStars(selectedRating); // start empty
 
   stars.forEach(star => {
     star.addEventListener('click', function () {
-      const rating = parseInt(this.getAttribute('data-value'), 10);
-      ratingInput.value = rating;
-      highlightStars(rating);
+      selectedRating = parseInt(this.getAttribute('data-value'), 10);
+      ratingInput.value = selectedRating;
+      highlightStars(selectedRating);
     });
+  });
+
+  // Ensure default 2 stars if no selection
+  document.querySelector('form').addEventListener('submit', function() {
+    if (selectedRating === 0) {
+      ratingInput.value = 2;
+    }
   });
 </script>
 
