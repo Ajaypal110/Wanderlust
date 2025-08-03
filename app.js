@@ -1,6 +1,7 @@
-if(process.env.NODE_ENV != "production"){
+if (process.env.NODE_ENV != "production") {
     require("dotenv").config();
-};
+}
+
 const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
@@ -25,11 +26,15 @@ const {saveRedirectUrl} = require("./middleware.js");
 const listingController = require("./controllers/listing.js");
 const reviewController = require("./controllers/review.js");
 const usersContoller = require("./controllers/users.js");
-const dbUrl = process.env.ATLASDB_URL;
 
 const multer  = require('multer')
 const {storage} = require("./cloudconfig.js");
 const upload = multer({ storage })
+
+const axios = require("axios");
+const cron = require("node-cron");
+
+const dbUrl = process.env.ATLASDB_URL;
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
@@ -39,12 +44,21 @@ app.use(methodOverride("_method"));
 app.engine("ejs", ejsMate);
 app.use(express.static(path.join(__dirname, "/public")));
 
-
-main().then(() => { console.log("Server Connect...."); }).catch((err) => { console.log(err); });
-async function main() {
-    await mongoose.connect(dbUrl);
+// -------------------- FIX MONGODB CONNECTION --------------------
+async function connectDB() {
+    try {
+        await mongoose.connect(dbUrl, {
+            serverSelectionTimeoutMS: 30000,
+            tls: true
+        });
+        console.log("✅ MongoDB connected successfully");
+    } catch (err) {
+        console.error("❌ MongoDB connection error:", err);
+    }
 }
+connectDB();
 
+// -------------------- SESSION STORE --------------------
 const store = MongoStore.create({
     mongoUrl: dbUrl,
     crypto:{
@@ -53,7 +67,7 @@ const store = MongoStore.create({
     touchAfter:24 * 3600,
 });
 
-store.on("error" , () =>{
+store.on("error" , (err) =>{
     console.log("ERROR IN MONGO SESSION" , err);
 });
 
@@ -69,7 +83,7 @@ const sessionOptions = {
     }
 };
 
-
+// -------------------- ROUTES --------------------
 app.get("/", listingController.homePage);
 
 app.use(session(sessionOptions));
@@ -89,33 +103,22 @@ app.use((req,res,next) =>{
 });
 
 app.get("/listings", wrapAsync(listingController.index));
-
 app.get("/listings/new", isLoggedin,listingController.renderNewForm);
-
 app.get("/listings/:id/edit",isLoggedin,isOwner, wrapAsync(listingController.renderEditForm));
-
 app.get("/listings/:id", wrapAsync(listingController.showListing));
-
 app.post("/listings",isLoggedin,upload.single("listing[image]"), formatListingImage, validateListing, wrapAsync(listingController.createListing));
-
 app.put("/listings/:id",isLoggedin,isOwner,upload.single("listing[image]"),validateListing, wrapAsync(listingController.updateListing));
-
 app.delete("/listings/:id", isLoggedin,isOwner,wrapAsync(listingController.deleteListing));
-
 app.post("/listings/:id/reviews" ,isLoggedin,validateReview, wrapAsync(reviewController.addReview));
-
 app.delete("/listings/:id/reviews/:reviewId",isLoggedin,isReviewAuthor,wrapAsync(reviewController.deleteReview));
 
 app.get("/signup",(usersContoller.signupForm));
-
 app.post("/signup", wrapAsync(usersContoller.newUser));
-
 app.get("/login" ,usersContoller.loginForm);
-
 app.post("/login" ,saveRedirectUrl, passport.authenticate("local",{failureRedirect:"/login",failureFlash:true}) ,usersContoller.loginUser);
-
 app.get("/logout",usersContoller.logoutUser)
 
+// -------------------- ERROR HANDLING --------------------
 app.use((req, res, next) => {
     next(new ExpressError(404, "Page Not Found!!!"));
 });
@@ -125,7 +128,21 @@ app.use((err, req, res, next) => {
     res.status(statusCode).render("error.ejs", { message });
 });
 
-app.listen(8080, () => {
-    console.log("Listening....");
-    
+// -------------------- KEEP ALIVE (FREE RENDER) --------------------
+if (process.env.RENDER_EXTERNAL_URL) {
+    const URL = process.env.RENDER_EXTERNAL_URL;
+    cron.schedule("*/14 * * * *", async () => {
+        try {
+            await axios.get(URL);
+            console.log("Keep-alive ping sent:", URL);
+        } catch (err) {
+            console.log("Keep-alive ping failed:", err.message);
+        }
+    });
+}
+
+// -------------------- SERVER LISTEN --------------------
+const port = process.env.PORT || 8080;
+app.listen(port, () => {
+    console.log(`Listening on port ${port}...`);
 });
