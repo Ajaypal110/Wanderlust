@@ -1,0 +1,201 @@
+<% layout("layouts/boilerplate") %>
+
+<div class="container py-5">
+
+  <h2 class="text-center fw-bold mb-4 text-primary">
+    <%= listing.title %>
+  </h2>
+
+  <div class="card shadow-lg border-0 rounded-4 mx-auto mb-5" style="max-width: 800px;">
+    <img src="<%= listing.image.url %>" 
+         class="card-img-top rounded-top" 
+         alt="listing_image"
+         style="height: 380px; object-fit: cover;" />
+
+    <div class="card-body p-4">
+
+      <p class="mb-2">
+        <span class="fw-bold text-secondary">Owned by:</span>
+        <span class="text-dark fs-5"><%= listing.owner ? listing.owner.username : "Unknown" %></span>
+      </p>
+
+      <h4 class="fw-bold mb-3 text-success">
+        ₹ <%= listing.price?.toLocaleString("en-IN") %>
+        <small class="text-muted fw-light">/night</small>
+      </h4>
+
+      <p class="text-muted mb-4" style="font-size: 1.1rem; line-height: 1.6;">
+        <%= listing.description %>
+      </p>
+
+      <div class="d-flex align-items-center text-primary mb-2">
+        <i class="bi bi-geo-alt-fill me-2 fs-5"></i>
+        <span class="fw-semibold"><%= listing.location %>, <%= listing.country %></span>
+      </div>
+    </div>
+  </div>
+
+  <% if (currUser && listing.owner && currUser._id.toString()===listing.owner._id.toString()) { %>
+    <div class="text-center mb-5">
+      <a href="/listings/<%= listing._id %>/edit" class="btn btn-warning px-4 me-2">Edit</a>
+      <form method="POST" action="/listings/<%= listing._id %>?_method=DELETE" class="d-inline">
+        <button type="submit" class="btn btn-danger px-4">Delete</button>
+      </form>
+    </div>
+  <% } %>
+
+  <hr class="my-5">
+
+  <% if(currUser){ %>
+    <div class="mb-5">
+      <h4 class="fw-bold mb-3 text-secondary">Leave a Review</h4>
+      <form method="post" action="/listings/<%= listing._id %>/reviews" novalidate class="needs-validation">
+
+        <!-- ⭐ Star Rating -->
+        <div class="mb-3 mt-3">
+          <label class="form-label fw-semibold">Rating:</label>
+          <div id="starRating" class="mb-2">
+            <% for (let i=1; i <=5; i++) { %>
+              <i class="bi <%= i <= 2 ? 'bi-star-fill' : 'bi-star' %> text-warning"
+                data-value="<%= i %>"
+                style="font-size: 1.7rem; cursor: pointer;"></i>
+            <% } %>
+          </div>
+          <input type="hidden" id="ratingInput" name="review[rating]" value="2" />
+        </div>
+
+        <!-- Comment -->
+        <div class="mb-3 mt-3">
+          <label for="comments" class="form-label fw-semibold">Comment:</label>
+          <textarea name="review[comment]" id="comment" cols="30" rows="5" class="form-control shadow-sm"
+            style="border-radius: 10px;" required></textarea>
+          <div class="invalid-feedback">Please add some comment for review.</div>
+        </div>
+
+        <button class="btn btn-outline-primary px-4">Submit Review</button>
+      </form>
+    </div>
+  <% } %>
+
+  <% if(listing.reviews && listing.reviews.length > 0){%>
+    <h3 class="fw-bold mb-4 text-secondary">All Reviews</h3>
+    <div class="row g-4">
+      <% for (let review of listing.reviews) { %>
+        <div class="col-md-6">
+          <div class="card shadow-sm border-0 h-100 rounded-3">
+            <div class="card-body">
+              <h5 class="card-title fw-bold text-primary">@<%= review.author.username %></h5>
+              <p class="card-text"><%= review.comment %></p>
+              <p class="card-text">
+                <% for (let i=1; i <=5; i++) { %>
+                  <% if (i <= review.rating) { %>
+                    <i class="bi bi-star-fill text-warning"></i>
+                  <% } else { %>
+                    <i class="bi bi-star text-warning"></i>
+                  <% } %>
+                <% } %>
+              </p>
+            </div>
+            <form class="mb-3 text-center" method="post"
+              action="/listings/<%= listing._id %>/reviews/<%= review._id %>?_method=DELETE">
+              <button class="btn btn-sm btn-danger">Delete</button>
+            </form>
+          </div>
+        </div>
+      <% } %>
+    </div>
+  <% } %>
+
+  <div class="text-center mt-5">
+    <h3 class="fw-bold mb-3" style="font-size: 2rem; color: #333;">Where you’ll be</h3>
+    <div id="map" class="mx-auto shadow-lg rounded" style="height: 450px; width: 90%;"></div>
+  </div>
+
+</div>
+
+<!-- ⭐ Star Rating Script -->
+<script>
+  const stars = document.querySelectorAll('#starRating i');
+  const ratingInput = document.getElementById('ratingInput');
+
+  function highlightStars(rating) {
+    stars.forEach((s, index) => {
+      if (index < rating) {
+        s.classList.add('bi-star-fill');
+        s.classList.remove('bi-star');
+      } else {
+        s.classList.add('bi-star');
+        s.classList.remove('bi-star-fill');
+      }
+    });
+  }
+
+  highlightStars(2);
+
+  stars.forEach(star => {
+    star.addEventListener('click', function () {
+      const rating = parseInt(this.getAttribute('data-value'), 10);
+      ratingInput.value = rating;
+      highlightStars(rating);
+    });
+  });
+</script>
+
+<!-- 🌍 Map Script -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const locationName = "<%= listing.location %>";
+  const listingTitle = "<%= listing.title %>";
+
+  const map = L.map('map', { scrollWheelZoom: false }).setView([20.5937, 78.9629], 5);
+
+  const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+    maxZoom: 20,
+    attribution: '© OpenStreetMap, Tiles © HOT'
+  }).addTo(map);
+
+  const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 20,
+    attribution: '© Esri & Contributors'
+  });
+
+  const darkLayer = L.tileLayer('https://cartodb-basemaps-a.global.ssl.fastly.net/dark_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 19,
+    attribution: '© OSM & CARTO'
+  });
+
+  L.control.layers({
+    "Street": streetLayer,
+    "Satellite": satelliteLayer,
+    "Dark": darkLayer
+  }).addTo(map);
+
+  const redIcon = new L.Icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+  });
+
+  map.on('click', () => map.scrollWheelZoom.enable());
+
+  fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationName)}`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.length > 0) {
+        const lat = data[0].lat;
+        const lon = data[0].lon;
+        map.setView([lat, lon], 13);
+
+        L.marker([lat, lon], { icon: redIcon }).addTo(map)
+          .bindPopup(`<b>${listingTitle}</b><br>${locationName}`)
+          .openPopup();
+      } else {
+        console.warn("Location not found:", locationName);
+      }
+    })
+    .catch(err => console.error("Map error:", err));
+});
+</script>

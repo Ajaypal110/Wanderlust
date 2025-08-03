@@ -1,0 +1,99 @@
+<% layout("layouts/boilerplate") %>
+
+<div class="container my-5">
+
+  <h2 class="text-center fw-bold text-primary mb-4">Create a New Listing</h2>
+
+  <div class="card shadow-lg border-0 rounded-4 p-4 mx-auto" style="max-width: 800px;">
+
+    <form method="POST" action="/listings" novalidate class="needs-validation" enctype="multipart/form-data">
+
+      <div class="mb-3">
+        <label for="title" class="form-label fw-semibold">Title</label>
+        <input name="listing[title]" 
+               placeholder="Enter Title" 
+               type="text" 
+               class="form-control shadow-sm rounded-3" 
+               required />
+        <div class="valid-feedback">Title looks good!</div>
+      </div>
+
+      <div class="mb-3">
+        <label for="description" class="form-label fw-semibold">Description</label>
+        <textarea name="listing[description]" 
+                  class="form-control shadow-sm rounded-3" 
+                  rows="4" 
+                  placeholder="Write a short description..." 
+                  required></textarea>
+        <div class="invalid-feedback">Please enter a short description.</div>
+      </div>
+
+      <div class="mb-4">
+        <label for="image" class="form-label fw-semibold">Upload Image</label>
+        <input name="listing[image]" 
+               type="file" 
+               id="imageInput"
+               class="form-control shadow-sm rounded-3" 
+               required />
+
+        <div class="mt-3 text-center">
+          <img id="imagePreview" class="img-fluid rounded-3 shadow-sm border" 
+               style="max-height: 200px; display:none; object-fit: cover;" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="mb-3 col-md-4">
+          <label for="price" class="form-label fw-semibold">Price (₹/night)</label>
+          <input name="listing[price]" 
+                 placeholder="6000" 
+                 type="number" 
+                 class="form-control shadow-sm rounded-3" 
+                 required />
+          <div class="invalid-feedback">Please provide a valid price.</div>
+        </div>
+
+        <div class="mb-3 col-md-8">
+          <label for="country" class="form-label fw-semibold">Country</label>
+          <input name="listing[country]" 
+                 placeholder="India" 
+                 type="text" 
+                 class="form-control shadow-sm rounded-3" 
+                 required />
+          <div class="invalid-feedback">Please provide a valid country name.</div>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="location" class="form-label fw-semibold">Location</label>
+        <input name="listing[location]" 
+               placeholder="Udaipur" 
+               type="text" 
+               class="form-control shadow-sm rounded-3" 
+               required />
+        <div class="invalid-feedback">Please provide a valid location.</div>
+      </div>
+
+      <div class="text-center mt-4">
+        <button class="btn btn-success px-5 py-2 fw-semibold shadow-sm rounded-3">
+          <i class="bi bi-plus-circle me-2"></i> Add Listing
+        </button>
+      </div>
+      
+    </form>
+
+  </div>
+</div>
+
+<script>
+  const imageInput = document.getElementById('imageInput');
+  const imagePreview = document.getElementById('imagePreview');
+
+  imageInput.addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      imagePreview.src = URL.createObjectURL(file);
+      imagePreview.style.display = 'block';
+    }
+  });
+</script>

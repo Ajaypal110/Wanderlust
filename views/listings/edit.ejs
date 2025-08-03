@@ -1,0 +1,87 @@
+<% layout("layouts/boilerplate") %>
+
+<div class="container my-5">
+
+  <h2 class="text-center fw-bold text-primary mb-4">Edit Your Listing</h2>
+
+  <div class="card shadow-lg border-0 rounded-4 p-4 mx-auto" style="max-width: 800px;">
+
+    <form method="POST" 
+          action="/listings/<%= listing._id %>?_method=PUT" 
+          class="needs-validation" 
+          novalidate 
+          enctype="multipart/form-data">
+
+      <div class="mb-3">
+        <label for="title" class="form-label fw-semibold">Title</label>
+        <input name="listing[title]" 
+               value="<%= listing.title %>" 
+               type="text" 
+               class="form-control shadow-sm rounded-3" 
+               required />
+        <div class="valid-feedback">Title looks good!</div>
+      </div>
+
+      <div class="mb-3">
+        <label for="description" class="form-label fw-semibold">Description</label>
+        <textarea name="listing[description]" 
+                  class="form-control shadow-sm rounded-3" 
+                  rows="4" required><%= listing.description %></textarea>
+        <div class="invalid-feedback">Please enter a short description.</div>
+      </div>
+
+      <div class="mb-4 text-center">
+        <p class="fw-semibold text-secondary mb-2">Current Image</p>
+        <img src="<%= originalListingUrl %>" 
+             class="img-fluid rounded-3 shadow-sm border" 
+             style="max-height: 200px; object-fit: cover;" />
+      </div>
+
+      <div class="mb-3">
+        <label for="image" class="form-label fw-semibold">Upload New Image</label>
+        <input name="listing[image]" 
+               type="file" 
+               class="form-control shadow-sm rounded-3" />
+      </div>
+
+      <div class="row">
+        <div class="mb-3 col-md-4">
+          <label for="price" class="form-label fw-semibold">Price (₹/night)</label>
+          <input name="listing[price]" 
+                 value="<%= listing.price %>" 
+                 type="number" 
+                 class="form-control shadow-sm rounded-3" 
+                 required />
+          <div class="invalid-feedback">Please provide a valid price.</div>
+        </div>
+        <div class="mb-3 col-md-8">
+          <label for="country" class="form-label fw-semibold">Country</label>
+          <input name="listing[country]" 
+                 value="<%= listing.country %>" 
+                 type="text" 
+                 class="form-control shadow-sm rounded-3" 
+                 required />
+          <div class="invalid-feedback">Please provide a valid country name.</div>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="location" class="form-label fw-semibold">Location</label>
+        <input name="listing[location]" 
+               value="<%= listing.location %>" 
+               type="text" 
+               class="form-control shadow-sm rounded-3" 
+               required />
+        <div class="invalid-feedback">Please provide a valid location.</div>
+      </div>
+
+      <div class="text-center mt-4">
+        <button class="btn btn-primary px-5 py-2 fw-semibold shadow-sm rounded-3">
+          <i class="bi bi-pencil-square me-2"></i> Update Listing
+        </button>
+      </div>
+      
+    </form>
+
+  </div>
+</div>

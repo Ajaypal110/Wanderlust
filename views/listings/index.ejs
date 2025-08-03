@@ -1,0 +1,112 @@
+<% layout("layouts/boilerplate") %>
+
+<body class="bg-light">
+  <div class="container py-5">
+
+    <h3 class="text-center fw-bold mb-4 text-primary">Explore All Listings</h3>
+
+    <div class="row mb-4 g-3 justify-content-center align-items-center">
+
+      <div class="col-md-6 col-12">
+        <input type="text" id="searchInput" class="form-control shadow-sm px-4 py-2"
+          placeholder="Search location..."
+          style="border-radius: 30px; font-size: 1rem;">
+      </div>
+
+      <div class="col-md-4 col-12 text-md-end text-center">
+        <label class="form-check-label me-2 fw-semibold text-secondary" for="taxToggle">
+          Show Price with Tax
+        </label>
+        <div class="form-check form-switch d-inline-block">
+          <input class="form-check-input" type="checkbox" id="taxToggle">
+        </div>
+      </div>
+    </div>
+
+    <div class="row row-cols-lg-3 row-cols-md-2 row-cols-1 g-4" id="listingContainer">
+      <% for(let listing of allListing) { %>
+        <div class="col listing-item">
+          <a href="/listings/<%= listing._id %>" class="text-decoration-none text-dark">
+            <div class="card listing-card shadow-lg border-0 h-100 rounded-3 overflow-hidden">
+
+              <div class="position-relative">
+                <img src="<%= listing.image.url %>" 
+                     class="card-img-top"
+                     alt="listing_image" 
+                     style="height: 18rem; object-fit: cover;">
+                <span class="price-badge position-absolute top-0 end-0 bg-danger text-white px-3 py-1 rounded-start">
+                  ₹ <span class="listing-price"><%= listing.price %></span>/Night
+                </span>
+              </div>
+
+              <div class="card-body">
+                <h5 class="card-title fw-bold listing-title"><%= listing.title %></h5>
+                <p class="card-text text-muted mb-2 listing-location">
+                  <i class="bi bi-geo-alt-fill text-danger"></i>
+                  <%= listing.location || "Unknown Location" %>
+                </p>
+                <p class="mb-0 small text-secondary">
+                  <%= listing.description.length > 60 
+                        ? listing.description.substring(0, 60) + "..." 
+                        : listing.description %>
+                </p>
+              </div>
+
+            </div>
+          </a>
+        </div>
+      <% } %>
+    </div>
+
+  </div>
+
+  <style>
+    .price-badge {
+      font-weight: 600;
+      font-size: 0.95rem;
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+    }
+
+    #searchInput:focus {
+      border-color: #0d6efd;
+      box-shadow: 0 0 8px rgba(13,110,253,0.3);
+    }
+  </style>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const searchInput = document.getElementById('searchInput');
+      const listingItems = document.querySelectorAll('.listing-item');
+      const taxToggle = document.getElementById('taxToggle');
+      const listingPrices = document.querySelectorAll('.listing-price');
+      const taxRate = 0.20;
+
+      const basePrices = Array.from(listingPrices).map(el => parseFloat(el.textContent.replace(/,/g, '')));
+
+      function formatPrice(amount) {
+        return amount.toLocaleString("en-IN");
+      }
+
+      taxToggle.addEventListener('change', function() {
+        listingPrices.forEach((el, index) => {
+          if (this.checked) {
+            const priceWithTax = basePrices[index] * (1 + taxRate);
+            el.textContent = formatPrice(priceWithTax);
+          } else {
+            el.textContent = formatPrice(basePrices[index]);
+          }
+        });
+      });
+
+      searchInput.addEventListener('input', function() {
+        const query = this.value.toLowerCase();
+        listingItems.forEach(item => {
+          const title = item.querySelector('.listing-title').textContent.toLowerCase();
+          const location = item.querySelector('.listing-location').textContent.toLowerCase();
+          item.style.display = (title.includes(query) || location.includes(query)) ? '' : 'none';
+        });
+      });
+    });
+  </script>
+</body>
