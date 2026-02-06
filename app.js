@@ -88,7 +88,6 @@ const sessionOptions = {
 };
 
 // -------------------- ROUTES --------------------
-app.get("/", listingController.homePage);
 
 app.use(session(sessionOptions));
 app.use(flash());
@@ -106,6 +105,7 @@ app.use((req,res,next) =>{
     next();
 });
 
+app.get("/", listingController.homePage);
 app.get("/listings", wrapAsync(listingController.index));
 app.get("/listings/new", isLoggedin,listingController.renderNewForm);
 app.get("/listings/:id/edit",isLoggedin,isOwner, wrapAsync(listingController.renderEditForm));
