@@ -49,10 +49,9 @@ Wanderlust is a full stack property listing platform where users can create acco
 ## Tech Stack
 
 Frontend:
-- React
+- Html
 - JavaScript
 - CSS
-- Axios
 
 Backend:
 - Node.js
