@@ -103,5 +103,7 @@ Full Stack MERN Developer
 
 GitHub:
 https://github.com/Ajaypal110
+
 Portfolio: (https://portfolio-ajaypalsingh.vercel.app)
+
 Fiverr: (https://www.fiverr.com/s/KeQB3rl)
